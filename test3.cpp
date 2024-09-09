@@ -3,7 +3,7 @@
 
 int main() {
     // Load the image
-    cv::Mat image = cv::imread("spr2024.jpg");
+    cv::Mat image = cv::imread("aut2024.png");
     if (image.empty()) {
         std::cerr << "Could not open or find the image!\n";
         return -1;
@@ -25,7 +25,8 @@ int main() {
     cv::inRange(hsvImage, cv::Scalar(10, 10, 10), cv::Scalar(256, 256, 100), darkGrayMask);   // Dark gray
     cv::inRange(hsvImage, cv::Scalar(0, 0, 55), cv::Scalar(0, 0, 65), blackMask);  // Black
 
-    cv::inRange(hsvImage, cv::Scalar(10, 0, 80), cv::Scalar(180, 255, 240), jpgMask);  // Black
+    //cv::inRange(hsvImage, cv::Scalar(10, 0, 80), cv::Scalar(180, 255, 240), jpgMask);
+    cv::inRange(hsvImage, cv::Scalar(10, 30, 0), cv::Scalar(180, 255, 255), jpgMask);
     
     // Combine masks for white, gray, and black
     cv::Mat excludedColorsMask;
@@ -47,12 +48,14 @@ int main() {
     // Draw bounding boxes around detected objects
     for (size_t i = 0; i < contours.size(); i++) {
         cv::Rect boundingBox = cv::boundingRect(contours[i]);
+      if (boundingBox.width >= 50 && boundingBox.height >= 50) {
         cv::rectangle(image, boundingBox, cv::Scalar(0, 255, 0), 2);  // Draw green rectangle
         std::cout << "Detected object at: " 
                   << "x = " << boundingBox.x 
                   << ", y = " << boundingBox.y 
                   << ", width = " << boundingBox.width 
                   << ", height = " << boundingBox.height << std::endl;
+      }
     }
     // resize image
     image.copyTo(image, jpgMask);
