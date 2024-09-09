@@ -4,7 +4,7 @@
 
 int main() {
     // Load the image
-    cv::Mat image = cv::imread("spr2024.jpg");
+    cv::Mat image = cv::imread("aut2024.png");
     if (image.empty()) {
         std::cerr << "Could not open or find the image!\n";
         return -1;
@@ -21,9 +21,12 @@ int main() {
         std::cerr << "Could not initialize tesseract.\n";
         return -1;
     }
+    cv::Rect rect;
+    rect.x = 98; rect.y = 297; rect.width = 130; rect.height = 67;
+    cv::Mat binar = binary(rect).clone();
 
     // Set the image for OCR
-    ocr->SetImage(binary.data, binary.cols, binary.rows, 1, binary.step);
+    ocr->SetImage(binar.data, binar.cols, binar.rows, 1, binar.step);
 
     // Extract text
     std::string extractedText = std::string(ocr->GetUTF8Text());
@@ -33,5 +36,7 @@ int main() {
     ocr->End();
     delete ocr;
 
+    cv::imshow("Detected Objects", binary);
+    cv::waitKey(0);
     return 0;
 }
