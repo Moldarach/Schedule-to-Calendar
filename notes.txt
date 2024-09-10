@@ -1,0 +1,3 @@
+https://medium.com/analytics-vidhya/how-to-install-opencv-for-visual-studio-code-using-ubuntu-os-9398b2f32d53
+https://docs.opencv.org/4.x/da/d97/tutorial_threshold_inRange.html
+https://docs.opencv.org/3.4/d9/db0/tutorial_hough_lines.html
