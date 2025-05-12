@@ -7,6 +7,7 @@
 #include <curl/curl.h>
 #include <libxml/HTMLparser.h>
 #include <libxml/xpath.h>
+#include <forward_list>
 using namespace cv;
 using namespace std;
 
@@ -35,6 +36,7 @@ void xml_test();
 xmlNodePtr get_next_element_sibling(xmlNodePtr node);
 xmlNodePtr find_closest_ancestor(xmlNodePtr node, const char* tag);
 void parse_and_navigate(const string& html);
+void fill_course_maps(string course_name);
 
 
 unordered_map<int, int> buckets_x;
@@ -42,10 +44,11 @@ unordered_map<int, int> buckets_y;
 string file_name;
 vector<string> all_days {"M", "T", "W", "Th", "F"};
 
-int main(int argc, char** argv) {
-  curl_test();
-  return 0;
+// for cv to html parsing
+unordered_map<string, unordered_map<int, forward_list<string>>> department_to_courses;
+unordered_map<int, forward_list<string>> courses_to_sections;
 
+int main(int argc, char** argv) {
   // Declare the output variables
   Mat dst, cdst, cdstP;
   const char* default_file = "spr2024.jpg";
@@ -116,6 +119,8 @@ int main(int argc, char** argv) {
   imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
   // Wait and Exit
   waitKey();
+  
+  curl_test();
   return 0;
 }
 
@@ -167,9 +172,11 @@ vector<course*> parseCourses(vector<int>& v_line, vector<int>& h_line) {
 
     tesseract::TessBaseAPI* ocr = new tesseract::TessBaseAPI();
     if (ocr->Init(NULL, "eng")) {  // Initialize with English language
-        std::cerr << "Could not initialize tesseract.\n";
-        return res;
+      std::cerr << "Could not initialize tesseract.\n";
+      return res;
     }
+    // set default dpi to avoid terminal error messages about 0 dpi
+    ocr->SetVariable("user_defined_dpi", "70"); 
 
     // Draw bounding boxes around detected objects
     for (size_t i = 0; i < contours.size(); i++) {
@@ -193,6 +200,8 @@ vector<course*> parseCourses(vector<int>& v_line, vector<int>& h_line) {
         //probably want to have courses with same name, location, etc. be considered the same
         parseDays(curr, v_line, boundingBox);
         parseTimes(curr, h_line, boundingBox);
+
+        fill_course_maps(curr->name);
       }
     }
     // resize image
@@ -313,6 +322,27 @@ int bin_search(vector<int>& vec, int target) {
   return 0;
 }
 
+void fill_course_maps(string course_name) {
+  int start = 0;
+  int it = 0;
+  while (!isdigit(course_name[it]))
+    it++;
+  string dep = course_name.substr(start, it - start);
+  cout<<"department " << dep << endl;
+  
+  start = it;
+  while (isdigit(course_name[it]))
+    it++;
+  string n = course_name.substr(start, it - start);
+  cout<<"coursenum " << n << endl;
+  int num = stoi(n);
+
+  string section = course_name.substr(it, course_name.size());
+  cout<<"section " << section<<endl;
+
+  department_to_courses[dep][num].push_front(section);
+}
+
 
 /*
 modified 4/23/25 to restart progress
@@ -346,7 +376,6 @@ void curl_test() {
       
       curl_easy_cleanup(curl);
       cout<<"html results: " << html_content.size() <<endl;
-      cerr<<"help me"<<endl;
       parse_and_navigate(html_content);
       //cout<<html_content<<endl;
 
